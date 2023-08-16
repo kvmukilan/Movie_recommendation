@@ -1,8 +1,4 @@
-import pandas as pd
-import re
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
 # Load your DataFrame from the CSV file
 df = pd.read_csv("IMDB_10000.csv")
