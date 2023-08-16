@@ -1,44 +1,71 @@
 import pandas as pd
-import re
-import nltk
-
+import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.decomposition import TruncatedSVD
+from nltk.corpus import stopwords  # Add this line
+from nltk.tokenize import word_tokenize
+import streamlit as st
 
-# Load your DataFrame from the CSV file
-df = pd.read_csv("IMDB_10000.csv")
-df.rename(columns={'desc': 'Plot'}, inplace=True)
-df['genre'] = df['genre'].astype(str)
+# Load the dataset into a DataFrame
+data = pd.read_csv('IMDB_10000.csv')  # Replace with your dataset path
 
-# Data Preprocessing
-df['clean_plot'] = df['Plot'].str.lower().replace('[^a-zA-Z]', ' ', regex=True).str.replace('\s+', ' ', regex=True)
-stop_words = set(nltk.corpus.stopwords.words('english'))
-df['clean_plot'] = df['clean_plot'].apply(lambda sentence: [word for word in str(sentence).split() if word not in stop_words and len(word) >= 3])
+# Remove missing values
+data.dropna(inplace=True)
 
-# Genre preprocessing
-df['genre'] = df['genre'].apply(lambda x: [word.lower().replace(' ', '') for word in x.split(',')])  # Corrected here
+# Tokenize and remove stopwords from the 'plot' column
+stop_words = set(stopwords.words('english'))
+data['plot'] = data['plot'].apply(lambda x: ' '.join([word for word in word_tokenize(x) if word.lower() not in stop_words]))
 
-df['clean_input'] = df.apply(lambda row: ' '.join(row['clean_plot']) + ' ' + ' '.join(row['genre']), axis=1)
+# TF-IDF Vectorization
+tfidf_vectorizer = TfidfVectorizer()
+tfidf_matrix = tfidf_vectorizer.fit_transform(data['plot'])
 
-# Feature Extraction
-tfidf = TfidfVectorizer()
-features = tfidf.fit_transform(df['clean_input'])
-cosine_sim = cosine_similarity(features, features)
+# Dimensionality reduction using TruncatedSVD
+num_components = 100  # Adjust as needed
+svd = TruncatedSVD(n_components=num_components)
+reduced_matrix = svd.fit_transform(tfidf_matrix)
 
-# Movie Recommendation
-index = pd.Series(df.index, index=df['title'])
+# Compute cosine similarity matrix
+cosine_sim = cosine_similarity(reduced_matrix, reduced_matrix)
 
-def recommend_movies(title, min_rating=5, genre=None):
-    movies = []
-    idx = index[title]
-    score = pd.Series(cosine_sim[idx]).sort_values(ascending=False)
-    top10 = list(score.iloc[1:11].index)
+# Streamlit app
+st.title("Movie Recommendation App")
+
+# User input for movie title
+movie_title = st.text_input("Enter a movie title:", "Vikram")
+
+# Rating filter slider
+rating_filter = st.slider("Select minimum rating:", 1, 10, 5)  # Adjust the range as needed
+
+# Get recommended movies based on cosine similarity and rating filter
+def recommend_movies_cosine_with_filter(movie_title, min_rating):
+    if movie_title not in data['title'].values:
+        return []
     
-    for i in top10:
-        if df['rating'][i] >= min_rating and (genre is None or genre in df['genre'][i]):
-            movies.append(df['title'][i])
-    return movies
+    idx = data[data['title'] == movie_title].index[0]
+    
+    # Get cosine similarity scores for the given movie
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    
+    # Sort movies based on similarity scores
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    
+    # Get movie indices with high similarity and rating above the filter
+    similar_movies = [i for i, score in sim_scores if score > 0.2 and data.iloc[i]['rating'] >= min_rating]
+    
+    # Get recommended movie titles
+    recommended_movies = data.iloc[similar_movies]['title'].tolist()
+    
+    return recommended_movies
 
-# Example usage
-the_movies_you_should_watch = recommend_movies('Vikram', min_rating=5, genre='action')
-print(the_movies_you_should_watch)
+# Get recommended movies
+recommended_movies = recommend_movies_cosine_with_filter(movie_title, rating_filter)
+
+# Display recommendations
+if recommended_movies:
+    st.subheader(f"Recommended movies similar to '{movie_title}' with a minimum rating of {rating_filter}:")
+    for movie in recommended_movies:
+        st.write(movie)
+else:
+    st.write("No recommendations found.")
