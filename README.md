@@ -1,6 +1,6 @@
 # Movie Recommendation System
 
-![Movie Recommendation System](https://github.com/kvmukilan/Movie_recommendation/raw/main/images/movie_recommendation.jpg)
+
 
 Welcome to the Movie Recommendation System repository! This project aims to provide you with a personalized movie recommendation experience based on your preferences and viewing history. Whether you're a movie enthusiast or just looking for something new to watch, this system can help you discover movies that align with your tastes.
 
@@ -17,11 +17,7 @@ Welcome to the Movie Recommendation System repository! This project aims to prov
 
 ## Introduction
 
-Have you ever been overwhelmed by the sheer number of movies available to watch? Our Movie Recommendation System is designed to alleviate that problem by offering you tailored movie suggestions. It employs collaborative filtering and content-based recommendation techniques to analyze your preferences and find movies that match your interests.
-
-## Features
-
-- **Personalized Recommendations:** The system analyzes your movie preferences and provides you with personalized movie suggestions.
+Have you ever been overwhelmed by the sheer number of movies available to watch? Our Movie Recommendation System is designed to alleviate that problem by offering you tailored movie suggestions. It employs collaborative filtering and content-based recommendation techniques to analyze your preferences and find movies 
 
 - **Rating based recommendations:** The system only shows you movies only above a certain rating
   
@@ -51,17 +47,17 @@ Have you ever been overwhelmed by the sheer number of movies available to watch?
 
 ## Usage
 
-1. Run the Flask web application:
+1. Run the streamlit web application:
 
    ```bash
-   python app.py
+   streamlit run [file_.py]
    ```
 
 2. Access the web interface in your browser by navigating to `http://localhost:5000`.
 
-3. Rate some movies to help the system understand your preferences.
 
-4. Get personalized movie recommendations based on your ratings and preferences.
+
+3.Get personalized movie recommendations based on your ratings and preferences.
 
 ## Contributing
 
